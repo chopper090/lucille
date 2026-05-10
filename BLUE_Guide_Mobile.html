@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=2">
+<meta name="theme-color" content="#1a1410">
+<title>Pentatonica Lab · Mobile</title>
+<style>
+:root{
+  --bg:#1a1410; --bg-2:#221a14; --bg-3:#2a201a; --bg-code:#15100c;
+  --ink:#f5ead5; --ink-d:#a89a82; --ink-m:#7a6f5e;
+  --line:#3a2e22; --line-2:#5a4838;
+  --accent:#f4c95d; --rust:#d96a3d;
+  --shadow-glow:rgba(244,201,93,.4);
+  --safe-top:env(safe-area-inset-top); --safe-bot:env(safe-area-inset-bottom);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:15px; line-height:1.5; overscroll-behavior-y:contain}
+body{padding-bottom:calc(72px + var(--safe-bot))}
+
+/* ========= HEADER (sticky) ========= */
+header{
+  position:sticky; top:0; z-index:50;
+  padding:calc(10px + var(--safe-top)) 14px 10px;
+  background:rgba(26,20,16,.92); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:10px;
+}
+.logo{font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--accent); letter-spacing:.06em; line-height:1; flex:1}
+.logo span{color:var(--ink-d); font-size:11px; letter-spacing:.18em; display:block; margin-top:2px; font-family:'JetBrains Mono',monospace}
+.lang-grp{display:flex; gap:3px}
+.lang-btn{
+  padding:5px 8px; background:transparent; border:1px solid var(--line-2);
+  cursor:pointer; border-radius:3px; color:var(--ink-d);
+  font:600 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.14em;
+  display:inline-flex; align-items:center; gap:3px;
+}
+.lang-btn .flag{font-size:13px}
+.lang-btn.on{background:var(--accent); color:#0a0907; border-color:var(--accent)}
+
+/* ========= TAB BAR (bottom, mobile-first) ========= */
+.tabbar{
+  position:fixed; bottom:0; left:0; right:0; z-index:60;
+  display:grid; grid-template-columns:repeat(4,1fr);
+  background:rgba(26,20,16,.96); backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:8px 4px calc(8px + var(--safe-bot));
+}
+.tab-btn{
+  background:transparent; border:none; padding:8px 4px;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  color:var(--ink-d); cursor:pointer; transition:color .2s;
+  font:600 9.5px/1.2 'JetBrains Mono',monospace; letter-spacing:.06em; text-transform:uppercase;
+}
+.tab-btn .ico{font-size:20px; line-height:1}
+.tab-btn.on{color:var(--accent)}
+.tab-btn.on .ico{filter:drop-shadow(0 0 8px var(--accent))}
+
+/* ========= PAGES ========= */
+.page{display:none; padding:14px}
+.page.on{display:block; animation:fade .25s ease}
+@keyframes fade{from{opacity:0; transform:translateY(4px)}to{opacity:1; transform:none}}
+.page-title{font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--accent); letter-spacing:.04em; line-height:1; margin:0 0 4px}
+.page-subtitle{font-size:13px; color:var(--ink-d); margin:0 0 16px; line-height:1.4}
+
+/* ========= CONTROLS ========= */
+.ctrl-group{margin-bottom:14px}
+.ctrl-label{
+  font:700 10px/1 'JetBrains Mono',monospace; letter-spacing:.2em;
+  color:var(--ink-m); text-transform:uppercase; margin-bottom:8px; display:block;
+}
+.chip-row{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  padding:9px 13px; background:var(--bg-3); border:1px solid var(--line-2);
+  color:var(--ink-d); border-radius:18px; cursor:pointer;
+  font:600 12px/1 'JetBrains Mono',monospace; letter-spacing:.04em;
+  min-height:38px; min-width:38px;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:all .2s;
+}
+.chip:active{transform:scale(.95)}
+.chip.on{background:var(--accent); color:#0a0907; border-color:var(--accent); box-shadow:0 0 12px rgba(244,201,93,.4)}
+select.m-select{
+  width:100%; padding:11px 36px 11px 14px; background:var(--bg-2);
+  border:1px solid var(--line-2); color:var(--ink); border-radius:6px;
+  font:600 13px/1 'JetBrains Mono',monospace; letter-spacing:.04em;
+  appearance:none; -webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--accent) 50%),linear-gradient(135deg,var(--accent) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
+  background-size:5px 5px,5px 5px; background-repeat:no-repeat;
+}
+select.m-select optgroup{color:var(--accent); font-style:normal; font-weight:700; background:var(--bg-3)}
+select.m-select option{color:var(--ink); background:var(--bg-2)}
+
+/* ========= FRETBOARD (mobile, vertical) ========= */
+.fb-wrap{
+  margin:14px -14px; padding:14px;
+  background:linear-gradient(180deg,#2a1f15,#1c140e);
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+}
+.fb-mobile{width:100%; height:auto; display:block}
+.fb-info{margin-top:10px; font-size:13px; color:var(--ink-d); line-height:1.5; font-style:italic}
+.fb-info b{color:var(--accent); font-style:normal}
+
+/* ========= MODE CARDS (mobile) ========= */
+.modes-grid-m{display:flex; flex-direction:column; gap:14px; margin-top:6px}
+.mode-card-m{
+  background:var(--bg-2); border:1px solid var(--line); border-radius:8px;
+  overflow:hidden; transition:border-color .2s;
+}
+.mode-card-m:active{transform:scale(.99)}
+.mc-band-m{height:5px; background:var(--mode-color,#888); box-shadow:0 0 14px var(--mode-color,#888)}
+.mc-head-m{padding:13px 16px 6px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px}
+.mc-name-m{font:600 19px/1.1 'Cormorant Garamond',serif; color:var(--ink); font-style:italic}
+.mc-alias-m{font:500 10px/1.2 'JetBrains Mono',monospace; color:var(--ink-d); letter-spacing:.12em; text-transform:uppercase; margin-top:3px}
+.mc-deg-m{font-family:'Bebas Neue',sans-serif; font-size:30px; color:var(--mode-color); line-height:1; opacity:.85}
+.mc-pill{
+  display:inline-block; padding:3px 10px; border-radius:11px;
+  font:700 9px/1 'JetBrains Mono',monospace; letter-spacing:.18em; text-transform:uppercase;
+  background:var(--mode-color); color:#0a0907; margin:0 16px 10px;
+}
+.mc-formula-m{display:flex; flex-wrap:wrap; gap:4px; padding:0 16px 8px}
+.mc-deg-chip{
+  padding:3px 7px; border:1px solid var(--line-2); border-radius:3px;
+  font:700 11px/1 'JetBrains Mono',monospace; color:var(--ink-d);
+  background:rgba(0,0,0,.2);
+}
+.mc-deg-chip.signature{border-color:var(--mode-color); color:var(--mode-color); box-shadow:0 0 8px var(--mode-color)}
+.mc-body-m{padding:8px 16px 0; font-size:13.5px; line-height:1.55; color:var(--ink-d)}
+.mc-body-m b{color:var(--ink)}
+.mc-body-m em{color:var(--mode-color); font-style:italic}
+.mc-cta-m{
+  display:block; width:calc(100% - 32px); margin:14px 16px 16px;
+  padding:11px; background:var(--mode-color); color:#0a0907;
+  border:none; border-radius:5px; font:700 11px/1 'JetBrains Mono',monospace;
+  letter-spacing:.18em; text-transform:uppercase; cursor:pointer; min-height:44px;
+}
+.mc-cta-m:active{filter:brightness(.92)}
+
+/* ========= PENTATONIC BOXES (mobile) ========= */
+.box-card-m{
+  background:var(--bg-2); border:1px solid var(--line); border-radius:8px;
+  margin-bottom:14px; overflow:hidden; --box-color:var(--accent);
+}
+.box-band-m{height:5px; background:var(--box-color); box-shadow:0 0 14px var(--box-color)}
+.box-head-m{display:flex; justify-content:space-between; align-items:flex-end; padding:13px 16px 8px}
+.box-num-m{font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--ink); line-height:1}
+.box-num-m span{color:var(--box-color); text-shadow:0 0 10px var(--box-color)}
+.box-fret-m{font:700 10px/1 'JetBrains Mono',monospace; color:var(--ink-d); letter-spacing:.12em; text-transform:uppercase; text-align:right}
+.box-fret-m strong{display:block; color:var(--box-color); font-size:14px; margin-top:3px}
+.box-caged-m{display:inline-block; margin:0 16px; padding:3px 10px; background:var(--box-color); color:#0a0907; border-radius:11px; font:700 9px/1 'JetBrains Mono',monospace; letter-spacing:.18em; text-transform:uppercase}
+.box-card-m svg{display:block; width:calc(100% - 24px); margin:8px 12px}
+.box-info-m{padding:10px 16px 0; font-size:13px; color:var(--ink-d); line-height:1.5; font-style:italic}
+.box-info-m b{color:var(--box-color); font-style:normal}
+.box-info-m code{font-family:'JetBrains Mono',monospace; color:var(--ink); background:rgba(244,201,93,.08); padding:1px 4px; border-radius:2px; font-style:normal}
+.box-cta-m{
+  display:block; width:calc(100% - 32px); margin:14px 16px 16px;
+  padding:11px; background:var(--box-color); color:#0a0907;
+  border:none; border-radius:5px; font:700 11px/1 'JetBrains Mono',monospace;
+  letter-spacing:.18em; text-transform:uppercase; cursor:pointer; min-height:44px;
+}
+
+/* ========= PROGRESSIONS (mobile) ========= */
+.prog-display-m{
+  background:var(--bg-2); border:1px solid var(--line); border-radius:8px;
+  margin-top:14px; overflow:hidden;
+}
+.prog-band-m{height:5px; background:var(--accent); box-shadow:0 0 14px var(--accent)}
+.prog-title-m{font:600 18px/1.2 'Cormorant Garamond',serif; color:var(--ink); font-style:italic; padding:14px 16px 4px; margin:0}
+.prog-key-m{display:inline-block; margin-left:6px; font:700 12px/1 'JetBrains Mono',monospace; letter-spacing:.16em; color:var(--accent); font-style:normal}
+.prog-mood-m{font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.2em; color:var(--rust); text-transform:uppercase; padding:0 16px 12px}
+.prog-bars-m{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:6px;
+  padding:14px 16px;
+  background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.05));
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+}
+.prog-bar-m{
+  background:var(--bg-3); border:1px solid var(--line);
+  border-left:3px solid var(--func-color,var(--ink-m));
+  border-radius:4px; padding:8px 10px; min-height:78px;
+  display:flex; flex-direction:column; justify-content:space-between;
+  cursor:pointer; transition:transform .15s, border-color .15s;
+}
+.prog-bar-m:active{transform:scale(.96); border-color:var(--func-color)}
+.pbm-num{font:600 8.5px/1 'JetBrains Mono',monospace; color:var(--ink-d); letter-spacing:.16em; text-transform:uppercase; opacity:.7}
+.pbm-stack{display:flex; flex-direction:column; align-items:center; gap:1px; flex:1; justify-content:center}
+.pbm-chord{font-family:'Bebas Neue',sans-serif; font-size:24px; line-height:1; color:var(--ink); text-shadow:0 0 10px var(--func-color)}
+.pbm-chord small{font-size:.55em; color:var(--ink-d); margin-left:1px}
+.pbm-roman{font:600 16px/1 'Cormorant Garamond',serif; color:var(--func-color); font-style:italic; opacity:.85}
+.pbm-fn{font:600 7.5px/1 'JetBrains Mono',monospace; color:var(--func-color); letter-spacing:.18em; text-transform:uppercase; opacity:.85; text-align:right}
+.prog-info-m{padding:14px 16px; font-size:13.5px; color:var(--ink-d); line-height:1.55}
+.prog-info-m b{color:var(--ink)}
+.prog-scale-m{display:block; margin-top:8px; padding:8px 12px; background:rgba(244,201,93,.08); border-left:3px solid var(--accent); font:600 12px/1.4 'JetBrains Mono',monospace; color:var(--ink); border-radius:0 3px 3px 0}
+.prog-ex-m{display:block; margin-top:8px; padding:8px 12px; background:rgba(217,106,61,.07); border-left:3px solid var(--rust); font:500 12px/1.4 'JetBrains Mono',monospace; color:var(--ink-m); font-style:italic; border-radius:0 3px 3px 0}
+
+/* SVG fb base */
+.fb-bg{fill:#3a2e22}
+.fb-fret,.fb-string{stroke:#5a4838; stroke-width:1}
+.fb-string-low{stroke:#7a6f5e; stroke-width:1.2}
+.fb-nut{stroke:#f5ead5; stroke-width:3}
+.fb-marker{fill:#7a6f5e; opacity:.4}
+.fb-fnum{fill:#a89a82; font:500 9px 'JetBrains Mono',monospace}
+.fb-snm{fill:#a89a82; font:500 9px 'JetBrains Mono',monospace}
+.note{stroke:rgba(245,234,213,.18); stroke-width:2}
+.note-root{filter:drop-shadow(0 0 8px var(--shadow-glow)); stroke:#fff5d8; stroke-width:1.8}
+.note-ct{stroke:#fff5d8; stroke-width:2; filter:drop-shadow(0 0 6px rgba(244,201,93,.45))}
+.note-extra-ring{fill:none; stroke:#fff5d8; stroke-width:2.2; filter:drop-shadow(0 0 5px rgba(255,245,216,.6))}
+.note-txt{font:700 10px 'JetBrains Mono',monospace; text-anchor:middle; dominant-baseline:central}
+.box-zone{stroke:#fff; stroke-width:2.5; fill-opacity:1}
+.caged-zone{stroke:#fff; stroke-width:1.5; stroke-opacity:.5; fill-opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PENTATONICA LAB <span>mobile · gary moore style</span></div>
+  <div class="lang-grp" role="group">
+    <button data-lang="it" class="lang-btn"><span class="flag">🇮🇹</span>IT</button>
+    <button data-lang="en" class="lang-btn"><span class="flag">🇬🇧</span>EN</button>
+  </div>
+</header>
+
+<!-- ============== PAGES ============== -->
+
+<!-- BOX -->
+<div class="page on" data-page="box">
+  <h1 class="page-title" data-i18n="page.box.title">Box pentatoniche</h1>
+  <p class="page-subtitle" data-i18n="page.box.sub">Le 5 posizioni della pentatonica minore. Tocca un box per esplorarlo.</p>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.tonalita">Tonalità</span>
+    <div class="chip-row" id="m-key-row"></div>
+  </div>
+
+  <div id="m-boxes"></div>
+</div>
+
+<!-- MODES -->
+<div class="page" data-page="modi">
+  <h1 class="page-title" data-i18n="page.modi.title">7 modi</h1>
+  <p class="page-subtitle" data-i18n="page.modi.sub">Stesso DNA, mood diverso. Ogni modo aggiunge note "extra" alla pentatonica.</p>
+
+  <div class="modes-grid-m" id="m-modes"></div>
+</div>
+
+<!-- FULLNECK -->
+<div class="page" data-page="manico">
+  <h1 class="page-title" data-i18n="page.manico.title">Mappa manico</h1>
+  <p class="page-subtitle" data-i18n="page.manico.sub">Esplora ogni scala su tutto il manico.</p>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.tonalita">Tonalità</span>
+    <div class="chip-row" id="m-fnkey-row"></div>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.scala">Scala</span>
+    <select class="m-select" id="m-fn-scale"></select>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.vista">Vista</span>
+    <select class="m-select" id="m-fn-view"></select>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.colori">Colori</span>
+    <div class="chip-row" id="m-color-row">
+      <button class="chip on" data-color="full" data-i18n="color.full">Tutti</button>
+      <button class="chip" data-color="triad" data-i18n="color.triad">1·3·5</button>
+      <button class="chip" data-color="extras" data-i18n="color.extras">Extra</button>
+      <button class="chip" data-color="neutral" data-i18n="color.neutral">Neutro</button>
+    </div>
+  </div>
+
+  <div class="fb-wrap">
+    <svg id="m-fullneck" class="fb-mobile" viewBox="0 0 720 260"></svg>
+  </div>
+  <div class="fb-info" id="m-fninfo"></div>
+</div>
+
+<!-- PROGRESSIONS -->
+<div class="page" data-page="progr">
+  <h1 class="page-title" data-i18n="page.progr.title">Progressioni</h1>
+  <p class="page-subtitle" data-i18n="page.progr.sub">Le più comuni del rock-blues. Tocca una battuta.</p>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.progressione">Progressione</span>
+    <select class="m-select" id="m-prog-select"></select>
+  </div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label" data-i18n="lbl.tonalita">Tonalità</span>
+    <div class="chip-row" id="m-progkey-row"></div>
+  </div>
+
+  <div class="prog-display-m">
+    <div class="prog-band-m"></div>
+    <h3 class="prog-title-m" id="m-pd-title"></h3>
+    <div class="prog-mood-m" id="m-pd-mood"></div>
+    <div class="prog-bars-m" id="m-prog-bars"></div>
+    <div class="prog-info-m" id="m-prog-info"></div>
+  </div>
+</div>
+
+<!-- ============== TAB BAR ============== -->
+<nav class="tabbar">
+  <button class="tab-btn on" data-tab="box"><span class="ico">🎸</span><span data-i18n="tab.box">Box</span></button>
+  <button class="tab-btn" data-tab="modi"><span class="ico">🎼</span><span data-i18n="tab.modi">Modi</span></button>
+  <button class="tab-btn" data-tab="manico"><span class="ico">🗺️</span><span data-i18n="tab.manico">Manico</span></button>
+  <button class="tab-btn" data-tab="progr"><span class="ico">🎵</span><span data-i18n="tab.progr">Progr</span></button>
+</nav>
+
+<script>
+/* ================================================================
+   PENTATONICA LAB · MOBILE — versione touch-first
+   ================================================================ */
+
+const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTES_FLAT=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const TUNING=[4,9,2,7,11,4]; // E A D G B E (semitones from C)
+const KEYS_12=['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'];
+const KEYS_DISPLAY={'A':'A','A#':'B♭','B':'B','C':'C','C#':'C♯','D':'D','D#':'E♭','E':'E','F':'F','F#':'F♯','G':'G','G#':'A♭'};
+
+function noteAt(s,f){ return NOTES[(TUNING[s]+f)%12]; }
+function noteToSemi(n){ return NOTES.indexOf(n); }
+function deltaFromA(k){ let d=(noteToSemi(k)-9)%12; if(d<0) d+=12; if(d>=8) d-=12; return d; }
+function degreeFor(root, note){
+  const r=NOTES.indexOf(root), n=NOTES.indexOf(note);
+  const semi=((n-r)%12+12)%12;
+  return ['1','b9','9','b3','3','4','b5','5','b6','6','b7','7'][semi];
+}
+function scaleNotes(root, mode){
+  const r=NOTES.indexOf(root);
+  const p={
+    minor:[0,3,5,7,10], major:[0,2,4,7,9],
+    'blues-min':[0,3,5,6,7,10], 'blues-maj':[0,2,3,4,7,9],
+    aeolian:[0,2,3,5,7,8,10], ionian:[0,2,4,5,7,9,11],
+    dorian:[0,2,3,5,7,9,10], phrygian:[0,1,3,5,7,8,10],
+    lydian:[0,2,4,6,7,9,11], mixolydian:[0,2,4,5,7,9,10],
+    locrian:[0,1,3,5,6,8,10],
+  }[mode]||[0,3,5,7,10];
+  return p.map(s=>NOTES[(r+s)%12]);
+}
+function buildNeckNotes(root, modeNotes, maxFret){
+  const out=[];
+  for(let s=0;s<6;s++) for(let f=0;f<=maxFret;f++){
+    const n=noteAt(s,f);
+    if(modeNotes.includes(n))
+      out.push({string:s, fret:f, degree:degreeFor(root,n), chordTone:false, dim:false});
+  }
+  return out;
+}
+
+/* ===== Color modes ===== */
+const DEG_COLOR={'1':'#FFB300','b9':'#5E35B0','9':'#FF8A50','b3':'#E53935','3':'#FF6F61','4':'#8BC34A','b5':'#9C27B0','5':'#00ACC1','b6':'#C2185B','6':'#F9A825','b7':'#E65100','7':'#2E7D32'};
+const DEG_TXT={'1':'#1a1410','b9':'#fff','9':'#1a1410','b3':'#fff','3':'#1a1410','4':'#1a1410','b5':'#fff','5':'#fff','b6':'#fff','6':'#1a1410','b7':'#fff','7':'#fff'};
+let COLOR_MODE='full';
+function colorFor(deg, isExtra){
+  const NEU={fill:'#7a6f5e',txt:'#f5ead5'};
+  if(COLOR_MODE==='neutral'){ return deg==='1'?{fill:'#FFB300',txt:'#1a1410'}:NEU; }
+  if(COLOR_MODE==='triad'){ return (['1','3','b3','5'].includes(deg)||isExtra)?{fill:DEG_COLOR[deg],txt:DEG_TXT[deg]}:NEU; }
+  if(COLOR_MODE==='extras'){ return (deg==='1'||isExtra)?{fill:DEG_COLOR[deg],txt:DEG_TXT[deg]}:NEU; }
+  return {fill:DEG_COLOR[deg]||'#888', txt:DEG_TXT[deg]||'#fff'};
+}
+
+/* ===== Fretboard renderer ===== */
+function buildBoxHull(notes, sfR, efR, W, H){
+  if(!notes.length) return '';
+  const padL=30,padT=18,padB=24,padR=14;
+  const fbW=W-padL-padR,fbH=H-padT-padB;
+  const fretCount=efR-sfR, fretW=fbW/fretCount, ss=fbH/5;
+  const byVis={};
+  notes.forEach(n=>{
+    const vis=5-n.string;
+    if(!byVis[vis]) byVis[vis]=[];
+    byVis[vis].push(n.fret);
+  });
+  const left=[],right=[];
+  for(let v=0;v<=5;v++){
+    if(!byVis[v]||!byVis[v].length) continue;
+    const fr=byVis[v];
+    const cy=padT+v*ss;
+    left.push({x:padL+(Math.min(...fr)-sfR-.5)*fretW, y:cy});
+    right.push({x:padL+(Math.max(...fr)-sfR-.5)*fretW, y:cy});
+  }
+  const pts=[...left,...right.reverse()];
+  if(pts.length<3) return '';
+  return 'M '+pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ')+' Z';
+}
+
+function renderFB(svg, opts){
+  const {sf=0,ef=15,W=720,H=260,notes=[],boxRanges=[]}=opts;
+  const padL=30,padT=18,padB=24,padR=14;
+  const fbW=W-padL-padR,fbH=H-padT-padB;
+  const fretCount=ef-sf,fretW=fbW/fretCount,ss=fbH/5;
+  let h=`<rect class="fb-bg" x="${padL}" y="${padT}" width="${fbW}" height="${fbH}"/>`;
+  // box ranges
+  boxRanges.forEach(b=>{
+    if(b.polygon) h+=`<path d="${b.polygon}" class="${b.cls||'box-zone'}" fill="${b.color}"/>`;
+  });
+  // frets
+  for(let i=0;i<=fretCount;i++){
+    const x=padL+i*fretW;
+    h+=`<line class="${sf===0&&i===0?'fb-nut':'fb-fret'}" x1="${x}" y1="${padT}" x2="${x}" y2="${padT+fbH}"/>`;
+  }
+  // strings
+  for(let s=0;s<6;s++){
+    const y=padT+s*ss;
+    h+=`<line class="${5-s<=1?'fb-string-low':'fb-string'}" x1="${padL}" y1="${y}" x2="${padL+fbW}" y2="${y}"/>`;
+  }
+  // markers
+  [3,5,7,9,15,17,21].forEach(f=>{
+    if(f>sf&&f<=ef){const cx=padL+(f-sf-.5)*fretW; h+=`<circle class="fb-marker" cx="${cx}" cy="${padT+fbH/2}" r="4"/>`;}
+  });
+  [12,24].forEach(f=>{
+    if(f>sf&&f<=ef){
+      const cx=padL+(f-sf-.5)*fretW;
+      h+=`<circle class="fb-marker" cx="${cx}" cy="${padT+fbH/2-ss*1.2}" r="4"/>`;
+      h+=`<circle class="fb-marker" cx="${cx}" cy="${padT+fbH/2+ss*1.2}" r="4"/>`;
+    }
+  });
+  // fret numbers
+  for(let f=sf===0?1:sf;f<=ef;f++){
+    if(f%2!==0&&f!==1&&f!==sf) continue;
+    const cx=padL+(f-sf-.5)*fretW;
+    h+=`<text class="fb-fnum" x="${cx}" y="${padT+fbH+16}" text-anchor="middle">${f}</text>`;
+  }
+  ['e','B','G','D','A','E'].forEach((n,s)=>{
+    h+=`<text class="fb-snm" x="${padL-8}" y="${padT+s*ss+3}" text-anchor="end">${n}</text>`;
+  });
+  // notes
+  notes.forEach(n=>{
+    const vis=5-n.string;
+    if(n.fret<sf||n.fret>ef) return;
+    const cx=padL+(n.fret-sf-.5)*fretW, cy=padT+vis*ss;
+    const isRoot=n.degree==='1';
+    const r=isRoot?14:12;
+    const c=colorFor(n.degree, n.extra);
+    let cls='note';
+    if(isRoot) cls+=' note-root';
+    h+=`<circle class="${cls}" cx="${cx}" cy="${cy}" r="${r}" fill="${c.fill}"/>`;
+    if(n.extra && !isRoot){
+      h+=`<circle class="note-extra-ring" cx="${cx}" cy="${cy}" r="${Math.min(r+3,15)}"/>`;
+    }
+    const noteName=noteAt(n.string,n.fret);
+    h+=`<text class="note-txt" x="${cx}" y="${cy}" fill="${c.txt}" style="font-size:9px">${noteName}·${n.degree}</text>`;
+  });
+  svg.innerHTML=h;
+}
+
+/* ===== I18N ===== */
+let LANG = (localStorage.getItem('pentaLab.lang')||'it');
+const I18N = {
+  it:{
+    'page.box.title':'Box pentatoniche', 'page.box.sub':'Le 5 posizioni della pentatonica minore. Tocca un box per esplorarlo.',
+    'page.modi.title':'7 modi', 'page.modi.sub':'Stesso DNA, mood diverso. Ogni modo aggiunge note "extra" alla pentatonica.',
+    'page.manico.title':'Mappa manico', 'page.manico.sub':'Esplora ogni scala su tutto il manico.',
+    'page.progr.title':'Progressioni', 'page.progr.sub':'Le più comuni del rock-blues. Tocca una battuta.',
+    'tab.box':'Box','tab.modi':'Modi','tab.manico':'Manico','tab.progr':'Progr',
+    'lbl.tonalita':'Tonalità','lbl.scala':'Scala','lbl.vista':'Vista','lbl.colori':'Colori','lbl.progressione':'Progressione',
+    'color.full':'Tutti','color.triad':'1·3·5','color.extras':'Extra','color.neutral':'Neutro',
+    'box.cta':'Apri sul manico','mode.cta':'Apri sul manico','box.position':'posizione','mode.preview':'Anteprima','box.preview':'box V tasto',
+    'scale.minor':'Pent min','scale.major':'Pent maj','scale.bmin':'Blues min','scale.bmaj':'Blues maj',
+    'scale.group.pent':'Pent / Blues','scale.group.mod-min':'Modali (sapore minore)','scale.group.mod-maj':'Modali (sapore maggiore)',
+    'view.group.full':'Estensione completa','view.group.2str':'2 corde','view.group.3str':'3 corde',
+    'view.all':'Tutte le note','view.rootsE':'Fondamentali · Mi','view.rootsA':'Fondamentali · La',
+    'view.h12':'6ª-5ª','view.h34':'4ª-3ª','view.h56':'2ª-1ª','view.3low':'6-5-4 gravi','view.3high':'3-2-1 acute',
+    'mode.flavor.major':'Sapore Maggiore','mode.flavor.minor':'Sapore Minore','mode.flavor.dim':'Sapore Diminuito',
+    'mode.character':'Carattere','mode.refs':'Riferimenti',
+    'prog.scale':'Scala consigliata:','prog.in':'in','prog.bar':'bar',
+    'fn.tonic':'tonic','fn.sub':'sub-dom','fn.dom':'dom','fn.modal':'modal','fn.rel':'rel.min','fn.borrow':'borrow',
+  },
+  en:{
+    'page.box.title':'Pentatonic boxes','page.box.sub':'The 5 minor pentatonic positions. Tap a box to explore.',
+    'page.modi.title':'7 modes','page.modi.sub':'Same DNA, different mood. Each mode adds "extra" notes to the parent pentatonic.',
+    'page.manico.title':'Fretboard map','page.manico.sub':'Explore every scale across the whole neck.',
+    'page.progr.title':'Progressions','page.progr.sub':'The most common in rock-blues. Tap a bar.',
+    'tab.box':'Boxes','tab.modi':'Modes','tab.manico':'Neck','tab.progr':'Prog',
+    'lbl.tonalita':'Key','lbl.scala':'Scale','lbl.vista':'View','lbl.colori':'Colours','lbl.progressione':'Progression',
+    'color.full':'All','color.triad':'1·3·5','color.extras':'Extra','color.neutral':'Neutral',
+    'box.cta':'Open on fretboard','mode.cta':'Open on fretboard','box.position':'position','mode.preview':'Preview','box.preview':'5th-fret box',
+    'scale.minor':'Pent min','scale.major':'Pent maj','scale.bmin':'Blues min','scale.bmaj':'Blues maj',
+    'scale.group.pent':'Pent / Blues','scale.group.mod-min':'Modal (minor flavour)','scale.group.mod-maj':'Modal (major flavour)',
+    'view.group.full':'Full neck','view.group.2str':'2 strings','view.group.3str':'3 strings',
+    'view.all':'All notes','view.rootsE':'Roots · low E','view.rootsA':'Roots · A string',
+    'view.h12':'6th-5th','view.h34':'4th-3rd','view.h56':'2nd-1st','view.3low':'6-5-4 low','view.3high':'3-2-1 high',
+    'mode.flavor.major':'Major flavour','mode.flavor.minor':'Minor flavour','mode.flavor.dim':'Diminished flavour',
+    'mode.character':'Character','mode.refs':'References',
+    'prog.scale':'Suggested scale:','prog.in':'in','prog.bar':'bar',
+    'fn.tonic':'tonic','fn.sub':'sub-dom','fn.dom':'dom','fn.modal':'modal','fn.rel':'rel.min','fn.borrow':'borrow',
+  }
+};
+function t(k){ return (I18N[LANG]&&I18N[LANG][k])||I18N.it[k]||k; }
+function applyI18n(){
+  document.documentElement.setAttribute('lang',LANG);
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n); });
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on', b.dataset.lang===LANG));
+  // Re-populate selects
+  buildScaleSelect(); buildViewSelect(); buildProgSelect();
+  renderBoxes(); renderModes(); renderFullneck(); renderProg(progId);
+}
+function setLang(l){ LANG=l; localStorage.setItem('pentaLab.lang',l); applyI18n(); }
+
+/* ===== Pentatonic boxes (mobile) ===== */
+const PENTA_BOXES_BASE=[
+  {n:1,sfBase:4,efBase:8,caged:'G · Easy shape',sigStr:3,sigFretBase:7,
+   it:'La "casa" del blues rock in <b>{KEY}</b>. Fondamentali al <b>{ROOT_FRET} tasto</b> (6ª e 1ª corda). Bend <code>{SIG_FRET}</code> (4→5).',
+   en:'Blues rock "home" in <b>{KEY}</b>. Roots at <b>fret {ROOT_FRET}</b> (6th and 1st). Bend <code>{SIG_FRET}</code> (4→5).'},
+  {n:2,sfBase:7,efBase:11,caged:'E · Extension shape',sigStr:1,sigFretBase:10,
+   it:'Connessione naturale dalla Box 1 in <b>{KEY}</b>. Bend B string fret <code>{SIG_FRET}</code>: 4→5.',
+   en:'Natural connection from Box 1 in <b>{KEY}</b>. Bend B string fret <code>{SIG_FRET}</code>: 4→5.'},
+  {n:3,sfBase:9,efBase:13,caged:'D · Shape 3',sigStr:0,sigFretBase:12,
+   it:'Box "ponte" in <b>{KEY}</b>. Fondamentale 6ª corda = <b>ottava della tonica</b>. Fraseggio orizzontale.',
+   en:'"Bridge" box in <b>{KEY}</b>. 6th-string root = <b>octave of the tonic</b>. Horizontal phrasing.'},
+  {n:4,sfBase:12,efBase:16,caged:'C · Funny B string',sigStr:2,sigFretBase:14,
+   it:'Ottava della Box 1 in <b>{KEY}</b>. Registro più alto. Bend più morbidi.',
+   en:'Octave of Box 1 in <b>{KEY}</b>. Higher register. Bends require less force.'},
+  {n:5,sfBase:14,efBase:18,caged:'A · Symmetrical shape',sigStr:1,sigFretBase:17,
+   it:'Box dei <b>bend acuti</b> in <b>{KEY}</b>. La firma di Moore: B string fret <code>{SIG_FRET}</code> (4→5).',
+   en:'The <b>high bend</b> box in <b>{KEY}</b>. Moore signature: B string fret <code>{SIG_FRET}</code> (4→5).'},
+];
+const BOX_SOLID=['#FFB300','#E53935','#00ACC1','#8BC34A','#9C27B0'];
+function fretRoman(n){ const r=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII']; return r[n]||n; }
+
+let pentaKey='A';
+
+function renderBoxes(){
+  const grid=document.getElementById('m-boxes');
+  if(!grid) return;
+  const d=deltaFromA(pentaKey);
+  const modeN=scaleNotes(pentaKey,'minor');
+  let html='';
+  PENTA_BOXES_BASE.forEach((b,i)=>{
+    const sf=b.sfBase+d, ef=b.efBase+d;
+    const sigFret=b.sigFretBase+d;
+    const rootFret=fretRoman(sf+1);
+    const tpl = b[LANG]||b.it;
+    const desc=tpl.replaceAll('{KEY}', pentaKey+'m').replaceAll('{ROOT_FRET}', rootFret).replaceAll('{SIG_FRET}', sigFret);
+    const color=BOX_SOLID[i%5];
+    html+=`<div class="box-card-m" style="--box-color:${color}">
+      <div class="box-band-m"></div>
+      <div class="box-head-m">
+        <div class="box-num-m">BOX <span>${String(b.n).padStart(2,'0')}</span></div>
+        <div class="box-fret-m">${t('box.position')}<strong>${rootFret} · ${pentaKey}m</strong></div>
+      </div>
+      <span class="box-caged-m">${b.caged}</span>
+      <svg viewBox="0 0 540 200" id="m-fb-box${b.n}"></svg>
+      <div class="box-info-m">${desc}</div>
+      <button class="box-cta-m" data-open-box="${b.n}" data-sf="${sf}" data-ef="${ef}">${t('box.cta')}</button>
+    </div>`;
+  });
+  grid.innerHTML=html;
+  PENTA_BOXES_BASE.forEach((b,i)=>{
+    const svg=document.getElementById(`m-fb-box${b.n}`);
+    if(!svg) return;
+    const sf=b.sfBase+d, ef=b.efBase+d;
+    const sfR=Math.max(0,sf-1), efR=ef+1;
+    const notes=buildNeckNotes(pentaKey,modeN,24).filter(n=>n.fret>=sf&&n.fret<=ef);
+    const hull=buildBoxHull(notes,sfR,efR,540,200);
+    const COLORS=['rgba(255,179,0,.45)','rgba(229,57,53,.45)','rgba(0,172,193,.45)','rgba(139,195,74,.45)','rgba(156,39,176,.45)'];
+    renderFB(svg,{sf:sfR,ef:efR,W:540,H:200,notes,boxRanges:hull?[{polygon:hull,color:COLORS[i%5]}]:[]});
+  });
+  // CTAs to fullneck
+  grid.querySelectorAll('[data-open-box]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      fnKey=pentaKey; fnMode='minor'; fnView='all';
+      document.getElementById('m-fn-scale').value='minor';
+      document.getElementById('m-fn-view').value='all';
+      buildKeyChips('m-fnkey-row', fnKey, k=>{fnKey=k; renderFullneck();});
+      switchTab('manico'); renderFullneck();
+    });
+  });
+}
+
+/* ===== Modes (mobile cards) ===== */
+const MODES_DATA={
+  ionian:{color:'#FF9800',deg:'I', flavor:'major',
+    name:{it:'Ionian',en:'Ionian'},
+    alias:{it:'Maggiore naturale · I grado',en:'Natural major · I degree'},
+    formula:[{d:'1'},{d:'2'},{d:'3'},{d:'4'},{d:'5'},{d:'6'},{d:'7',sig:1}],
+    body:{it:'<b>Carattere:</b> solare, stabile, "casa". Il <em>7</em> (sensibile) crea la cadenza verso la tonica. <b>Note extra:</b> 4 e 7. <b>Riferimenti:</b> "Let It Be", Beatles, country.',
+          en:'<b>Character:</b> sunny, stable, "home". The <em>7</em> (leading tone) creates cadence motion to the tonic. <b>Extras:</b> 4 and 7. <b>References:</b> "Let It Be", Beatles, country.'}},
+  dorian:{color:'#4CAF50',deg:'ii',flavor:'minor',
+    name:{it:'Dorian',en:'Dorian'},
+    alias:{it:'Minore con 6ª maggiore · II grado',en:'Minor with major 6th · II degree'},
+    formula:[{d:'1'},{d:'2'},{d:'b3'},{d:'4'},{d:'5'},{d:'6',sig:1},{d:'b7'}],
+    body:{it:'<b>Carattere:</b> minore "luminoso", jazzy, fusion. La <em>6</em> maggiore è la chiave. <b>Note extra:</b> 9 e 6. <b>Riferimenti:</b> "So What", Santana, "Oye Como Va".',
+          en:'<b>Character:</b> "bright" minor, jazzy, fusion. The major <em>6</em> is the key. <b>Extras:</b> 9 and 6. <b>References:</b> "So What", Santana, "Oye Como Va".'}},
+  phrygian:{color:'#E91E63',deg:'iii',flavor:'minor',
+    name:{it:'Phrygian',en:'Phrygian'},
+    alias:{it:'Minore con b9 · III grado',en:'Minor with b9 · III degree'},
+    formula:[{d:'1'},{d:'b2',sig:1},{d:'b3'},{d:'4'},{d:'5'},{d:'b6'},{d:'b7'}],
+    body:{it:'<b>Carattere:</b> drammatico, oscuro, "<em>spagnoleggiante</em>". La <em>b2</em> crea tensione esotica. <b>Riferimenti:</b> Flamenco, Metallica, neoclassical.',
+          en:'<b>Character:</b> dramatic, dark, "<em>Spanish</em>". The <em>b2</em> creates exotic tension. <b>References:</b> Flamenco, Metallica, neoclassical.'}},
+  lydian:{color:'#2196F3',deg:'IV',flavor:'major',
+    name:{it:'Lydian',en:'Lydian'},
+    alias:{it:'Maggiore con #4 · IV grado',en:'Major with #4 · IV degree'},
+    formula:[{d:'1'},{d:'2'},{d:'3'},{d:'#4',sig:1},{d:'5'},{d:'6'},{d:'7'}],
+    body:{it:'<b>Carattere:</b> etereo, sognante. La <em>#4</em> apre il suono cinematografico. <b>Riferimenti:</b> Satriani, tema "I Simpson", Vai.',
+          en:'<b>Character:</b> ethereal, dreamy. The <em>#4</em> opens up a cinematic sound. <b>References:</b> Satriani, "Simpsons" theme, Vai.'}},
+  mixolydian:{color:'#9C27B0',deg:'V',flavor:'major',
+    name:{it:'Mixolydian',en:'Mixolydian'},
+    alias:{it:'Maggiore con b7 · V grado',en:'Major with b7 · V degree'},
+    formula:[{d:'1'},{d:'2'},{d:'3'},{d:'4'},{d:'5'},{d:'6'},{d:'b7',sig:1}],
+    body:{it:'<b>Carattere:</b> maggiore "rilassato", rock-blues, dominante. La <em>b7</em> leva la tensione cadenzale. <b>Riferimenti:</b> "Sweet Child O\' Mine", "Sweet Home Alabama".',
+          en:'<b>Character:</b> "relaxed" major, rock-blues, dominant. The <em>b7</em> removes cadential tension. <b>References:</b> "Sweet Child O\' Mine", "Sweet Home Alabama".'}},
+  aeolian:{color:'#3F51B5',deg:'vi',flavor:'minor',
+    name:{it:'Aeolian',en:'Aeolian'},
+    alias:{it:'Minore naturale · VI grado',en:'Natural minor · VI degree'},
+    formula:[{d:'1'},{d:'2'},{d:'b3'},{d:'4'},{d:'5'},{d:'b6',sig:1},{d:'b7'}],
+    body:{it:'<b>Carattere:</b> minore "puro", malinconico, drammatico. È il modo del rock minore. <b>Note extra:</b> 9 e b6. <b>Riferimenti:</b> "Stairway to Heaven", "The Loner".',
+          en:'<b>Character:</b> "pure" minor, melancholic, dramatic. The mode of minor rock. <b>Extras:</b> 9 and b6. <b>References:</b> "Stairway to Heaven", "The Loner".'}},
+  locrian:{color:'#880E4F',deg:'vii°',flavor:'dim',
+    name:{it:'Locrian',en:'Locrian'},
+    alias:{it:'Semidiminuita · VII grado',en:'Half-diminished · VII degree'},
+    formula:[{d:'1'},{d:'b2'},{d:'b3'},{d:'4'},{d:'b5',sig:1},{d:'b6'},{d:'b7'}],
+    body:{it:'<b>Carattere:</b> instabile, "non-tonale". La <em>b5</em> nega la quinta naturale. Perfetto su accordi <em>m7b5</em>. <b>Riferimenti:</b> jazz su m7b5, Dream Theater.',
+          en:'<b>Character:</b> unstable, "non-tonal". The <em>b5</em> negates the natural fifth. Perfect over <em>m7b5</em> chords. <b>References:</b> jazz on m7b5, Dream Theater.'}}
+};
+
+function renderModes(){
+  const grid=document.getElementById('m-modes');
+  if(!grid) return;
+  let html='';
+  Object.entries(MODES_DATA).forEach(([key,m])=>{
+    const flav=t('mode.flavor.'+m.flavor);
+    html+=`<div class="mode-card-m" style="--mode-color:${m.color}">
+      <div class="mc-band-m"></div>
+      <div class="mc-head-m">
+        <div>
+          <div class="mc-name-m">${m.name[LANG]||m.name.it}</div>
+          <div class="mc-alias-m">${m.alias[LANG]||m.alias.it}</div>
+        </div>
+        <div class="mc-deg-m">${m.deg}</div>
+      </div>
+      <span class="mc-pill">${flav}</span>
+      <div class="mc-formula-m">${m.formula.map(f=>`<span class="mc-deg-chip${f.sig?' signature':''}">${f.d}</span>`).join('')}</div>
+      <div class="mc-body-m">${m.body[LANG]||m.body.it}</div>
+      <button class="mc-cta-m" data-open-mode="${key}">${t('mode.cta')}</button>
+    </div>`;
+  });
+  grid.innerHTML=html;
+  grid.querySelectorAll('[data-open-mode]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      fnMode=btn.dataset.openMode; fnView='all';
+      document.getElementById('m-fn-scale').value=fnMode;
+      document.getElementById('m-fn-view').value='all';
+      switchTab('manico'); renderFullneck();
+    });
+  });
+}
+
+/* ===== Fullneck (mobile) ===== */
+let fnKey='A', fnMode='minor', fnView='all';
+const SCALE_OPTS=[
+  {grp:'scale.group.pent', items:[
+    {v:'minor',  k:'scale.minor'},{v:'major',k:'scale.major'},
+    {v:'blues-min',k:'scale.bmin'},{v:'blues-maj',k:'scale.bmaj'}]},
+  {grp:'scale.group.mod-min', items:[
+    {v:'aeolian'},{v:'dorian'},{v:'phrygian'},{v:'locrian'}]},
+  {grp:'scale.group.mod-maj', items:[
+    {v:'ionian'},{v:'lydian'},{v:'mixolydian'}]}
+];
+const VIEW_OPTS=[
+  {grp:'view.group.full', items:[{v:'all',k:'view.all'},{v:'roots-E',k:'view.rootsE'},{v:'roots-A',k:'view.rootsA'}]},
+  {grp:'view.group.2str', items:[{v:'horizontal-12',k:'view.h12'},{v:'horizontal-34',k:'view.h34'},{v:'horizontal-56',k:'view.h56'}]},
+  {grp:'view.group.3str', items:[{v:'3str-low',k:'view.3low'},{v:'3str-high',k:'view.3high'}]}
+];
+
+function buildScaleSelect(){
+  const sel=document.getElementById('m-fn-scale');
+  if(!sel) return;
+  const cur=sel.value||fnMode;
+  sel.innerHTML=SCALE_OPTS.map(g=>{
+    const items=g.items.map(it=>{
+      const label = it.k ? t(it.k) : capitalize(it.v);
+      return `<option value="${it.v}">${label}</option>`;
+    }).join('');
+    return `<optgroup label="${t(g.grp)}">${items}</optgroup>`;
+  }).join('');
+  sel.value=cur;
+}
+function buildViewSelect(){
+  const sel=document.getElementById('m-fn-view');
+  if(!sel) return;
+  const cur=sel.value||fnView;
+  sel.innerHTML=VIEW_OPTS.map(g=>{
+    const items=g.items.map(it=>`<option value="${it.v}">${t(it.k)}</option>`).join('');
+    return `<optgroup label="${t(g.grp)}">${items}</optgroup>`;
+  }).join('');
+  sel.value=cur;
+}
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function renderFullneck(){
+  const svg=document.getElementById('m-fullneck');
+  if(!svg) return;
+  const isMinor=!['major','blues-maj','ionian','lydian','mixolydian'].includes(fnMode);
+  const isMajorFlavor=!isMinor;
+  const MODAL=['aeolian','ionian','dorian','phrygian','lydian','mixolydian','locrian'];
+  const isModal=MODAL.includes(fnMode);
+  const sf=0, ef=15;
+  const mN=scaleNotes(fnKey,fnMode);
+  let notes=buildNeckNotes(fnKey,mN,ef);
+  if(isModal){
+    const parent=scaleNotes(fnKey, isMajorFlavor?'major':'minor');
+    notes.forEach(n=>{
+      const nn=noteAt(n.string,n.fret);
+      if(!parent.includes(nn) && n.degree!=='1') n.extra=true;
+    });
+  }
+  if(fnView==='roots-E') notes=notes.filter(n=>n.degree==='1'&&n.string===0);
+  else if(fnView==='roots-A') notes=notes.filter(n=>n.degree==='1'&&n.string===1);
+  else if(fnView==='horizontal-12') notes=notes.filter(n=>n.string<=1);
+  else if(fnView==='horizontal-34') notes=notes.filter(n=>n.string===2||n.string===3);
+  else if(fnView==='horizontal-56') notes=notes.filter(n=>n.string>=4);
+  else if(fnView==='3str-low') notes=notes.filter(n=>n.string<=2);
+  else if(fnView==='3str-high') notes=notes.filter(n=>n.string>=3);
+  renderFB(svg,{sf,ef,W:720,H:260,notes});
+  const info=document.getElementById('m-fninfo');
+  if(info) info.innerHTML=`<b>${capitalize(fnMode)}</b> · ${KEYS_DISPLAY[fnKey]}${isMinor?'m':''}`;
+}
+
+/* ===== Progressions (mobile) ===== */
+const PROG_DATA={
+  'rock-min':{bars:['i','♭VII','♭VI','♭VII'],
+    it:{title:'i — ♭VII — ♭VI — ♭VII · "rock minore"',mood:'epico · oscuro · classic rock',desc:'Smoke on the Water, Stairway to Heaven. Tutto diatonico in aeolian.',scale:'A min pent / Aeolian'},
+    en:{title:'i — ♭VII — ♭VI — ♭VII · "minor rock"',mood:'epic · dark · classic rock',desc:'Smoke on the Water, Stairway to Heaven. All diatonic to aeolian.',scale:'A min pent / Aeolian'}},
+  'modal-loner':{bars:['i','♭VI','♭VII','i'],
+    it:{title:'i — ♭VI — ♭VII — i · "The Loner"',mood:'moderno · sospeso · prog',desc:'Am – F – G – Am. Pentatonica minore + 9 = suono moderno.',scale:'A Aeolian'},
+    en:{title:'i — ♭VI — ♭VII — i · "The Loner"',mood:'modern · suspended · prog',desc:'Am – F – G – Am. Min pent + 9 = modern sound.',scale:'A Aeolian'}},
+  'min-classic':{bars:['i','iv','V','i'],
+    it:{title:'i — iv — V · "minore classica"',mood:'classico · risoluto',desc:'Il V maggiore crea la cadenza perfetta. Usa armonica minore sul V7.',scale:'A Aeolian + harm. minor sul V7'},
+    en:{title:'i — iv — V · "classical minor"',mood:'classical · resolute',desc:'The major V creates the perfect cadence. Use harmonic minor on V7.',scale:'A Aeolian + harm. minor on V7'}},
+  'min-cycle':{bars:['i7','iv7','♭VII7','♭IIIM7','♭VIM7','iiø','V7','i'],
+    it:{title:'Minor cycle of 4ths · "Still Got the Blues"',mood:'profondo · romantico · circolare',desc:'Ogni accordo è la quarta del precedente. Il V7 finale risolve in i.',scale:'A Aeolian + A harm. minor sul V7'},
+    en:{title:'Minor cycle of 4ths · "Still Got the Blues"',mood:'deep · romantic · circular',desc:'Every chord is the 4th of the previous. The final V7 resolves to i.',scale:'A Aeolian + A harm. minor on V7'}},
+  'pop-1564':{bars:['I','V','vi','IV'],
+    it:{title:'I — V — vi — IV · "pop"',mood:'ottimista · pop · universale',desc:'Let It Be, Don\'t Stop Believin\'. La min pent della vi funziona su tutto.',scale:'A min pent (rel.)'},
+    en:{title:'I — V — vi — IV · "pop"',mood:'optimistic · pop · universal',desc:'Let It Be, Don\'t Stop Believin\'. Min pent of the vi works on everything.',scale:'A min pent (rel.)'}},
+  'rock-145':{bars:['I','IV','V','I'],
+    it:{title:'I — IV — V · "rock\'n\'roll"',mood:'festivo · solare',desc:'Mescola maj pent e min pent per il sound rock-blues.',scale:'Maj pent + min pent mix'},
+    en:{title:'I — IV — V · "rock\'n\'roll"',mood:'festive · sunny',desc:'Mix maj pent and min pent for the rock-blues sound.',scale:'Maj pent + min pent mix'}},
+  'modal-mix':{bars:['I','♭VII','IV','I'],
+    it:{title:'I — ♭VII — IV · "rock mixolydian"',mood:'arena rock · maestoso',desc:'Sweet Home Alabama, Hey Joe. La b7 è la nota caratteristica.',scale:'Mixolydian (1 2 3 4 5 6 b7)'},
+    en:{title:'I — ♭VII — IV · "mixolydian rock"',mood:'arena rock · majestic',desc:'Sweet Home Alabama, Hey Joe. The b7 is the characteristic note.',scale:'Mixolydian (1 2 3 4 5 6 b7)'}},
+  'jazz-251':{bars:['ii7','V7','IM7','IM7'],
+    it:{title:'IIm7 — V7 — Imaj7 · "cadenza jazz"',mood:'jazz · raffinato',desc:'La ii prepara, la V7 tende, la I risolve.',scale:'Ionian'},
+    en:{title:'IIm7 — V7 — Imaj7 · "jazz cadence"',mood:'jazz · refined',desc:'The ii prepares, the V7 tightens, the I resolves.',scale:'Ionian'}},
+  'blues-12':{bars:['I7','IV7','I7','I7','IV7','IV7','I7','I7','V7','IV7','I7','V7'],
+    it:{title:'12-bar blues',mood:'blues puro · ciclico',desc:'Tutti dominanti. Mix maj e min pent.',scale:'Mixolydian / pent mix'},
+    en:{title:'12-bar blues',mood:'pure blues · cyclic',desc:'All dominants. Mix maj and min pent.',scale:'Mixolydian / pent mix'}}
+};
+const PROG_GROUPS=[
+  {grp:{it:'Minori',en:'Minor'}, items:['rock-min','modal-loner','min-classic','min-cycle']},
+  {grp:{it:'Maggiori',en:'Major'}, items:['pop-1564','rock-145','modal-mix','jazz-251']},
+  {grp:{it:'Blues',en:'Blues'}, items:['blues-12']}
+];
+const FUNC_COLORS_M={tonic:'#FFB300',sub:'#00ACC1',dom:'#E53935',modal:'#9C27B0',rel:'#8BC34A',borrow:'#E65100'};
+function chordFn(roman){
+  const r=roman.replace(/[♭♯7Mø°/]+|maj/gi,'').toLowerCase().replace(/\s+/g,'');
+  if(r==='i') return 'tonic'; if(r==='v') return 'dom'; if(r==='iv') return 'sub';
+  if(r==='vi') return 'rel'; if(r==='ii'||r==='iii') return 'borrow';
+  if(/[♭b]/i.test(roman)) return 'modal'; return 'tonic';
+}
+function romanToChord(roman, key){
+  let s=roman.trim(), flat=false;
+  if(s.startsWith('♭')||s.startsWith('b')){flat=true; s=s.slice(1);}
+  const m=s.match(/^([ivxIVX]+)(.*)$/);
+  if(!m) return {name:roman, suffix:''};
+  const numeral=m[1], modifier=m[2];
+  const lower=numeral.toLowerCase();
+  const offsets={'i':0,'ii':2,'iii':4,'iv':5,'v':7,'vi':9,'vii':11};
+  let semi=offsets[lower];
+  if(semi===undefined) return {name:roman, suffix:''};
+  if(flat) semi-=1;
+  semi=((semi%12)+12)%12;
+  const keyIdx=NOTES.indexOf(key);
+  const targetIdx=(keyIdx+semi)%12;
+  const useFlat = flat || ['D#','G#','A#'].includes(NOTES[targetIdx]);
+  const name = useFlat ? NOTES_FLAT[targetIdx] : NOTES[targetIdx];
+  const isMinorRoman=(numeral===lower);
+  let suffix='';
+  if(modifier.includes('°')) suffix='dim';
+  else if(modifier.includes('ø')) suffix='m7♭5';
+  else if(/M7|maj7/i.test(modifier)) suffix='maj7';
+  else if(modifier.includes('7')) suffix=isMinorRoman?'m7':'7';
+  else if(isMinorRoman) suffix='m';
+  return {name, suffix};
+}
+let progKey='A', progId='rock-min';
+function progFlavor(p){
+  const f=(p.bars[0]||'').replace(/[♭♯b#7Mø°/]+|maj/gi,'').trim();
+  return /^[ivx]+$/.test(f)?'minor':'major';
+}
+function buildProgSelect(){
+  const sel=document.getElementById('m-prog-select');
+  if(!sel) return;
+  const cur=sel.value||progId;
+  sel.innerHTML=PROG_GROUPS.map(g=>{
+    const items=g.items.map(id=>{
+      const p=PROG_DATA[id]; const L=p[LANG]||p.it;
+      return `<option value="${id}">${L.title}</option>`;
+    }).join('');
+    return `<optgroup label="${g.grp[LANG]||g.grp.it}">${items}</optgroup>`;
+  }).join('');
+  sel.value=cur;
+}
+function renderProg(id){
+  const p=PROG_DATA[id]; if(!p) return;
+  progId=id;
+  const L=p[LANG]||p.it;
+  const fl=progFlavor(p);
+  const keyName=KEYS_DISPLAY[progKey]+(fl==='minor'?'m':'');
+  document.getElementById('m-pd-title').innerHTML=`${L.title} <span class="prog-key-m">— ${t('prog.in')} ${keyName}</span>`;
+  document.getElementById('m-pd-mood').textContent='Mood: '+L.mood;
+  const barsEl=document.getElementById('m-prog-bars');
+  barsEl.innerHTML=p.bars.map((roman,i)=>{
+    const fn=chordFn(roman);
+    const col=FUNC_COLORS_M[fn];
+    const ch=romanToChord(roman, progKey);
+    const chordHtml=`${ch.name}${ch.suffix?`<small>${ch.suffix}</small>`:''}`;
+    return `<div class="prog-bar-m" style="--func-color:${col}">
+      <div class="pbm-num">${t('prog.bar')} ${i+1}</div>
+      <div class="pbm-stack">
+        <div class="pbm-chord">${chordHtml}</div>
+        <div class="pbm-roman">${roman}</div>
+      </div>
+      <div class="pbm-fn">${t('fn.'+fn)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('m-prog-info').innerHTML=
+    `<p>${L.desc}</p>
+     <span class="prog-scale-m"><b>${t('prog.scale')}</b> ${L.scale}</span>`;
+}
+
+/* ===== Key chip rows ===== */
+function buildKeyChips(targetId, current, onPick){
+  const row=document.getElementById(targetId);
+  if(!row) return;
+  row.innerHTML=KEYS_12.map(k=>`<button class="chip${k===current?' on':''}" data-key="${k}">${KEYS_DISPLAY[k]}</button>`).join('');
+  row.querySelectorAll('[data-key]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      row.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+      b.classList.add('on');
+      onPick(b.dataset.key);
+    });
+  });
+}
+
+/* ===== Tabs ===== */
+function switchTab(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on', p.dataset.page===tab));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab));
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded',()=>{
+  // Tab listeners
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click',()=>switchTab(b.dataset.tab));
+  });
+  // Lang
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.addEventListener('click',()=>setLang(b.dataset.lang));
+  });
+
+  // Build dynamic UI
+  buildKeyChips('m-key-row', pentaKey, k=>{pentaKey=k; renderBoxes();});
+  buildKeyChips('m-fnkey-row', fnKey, k=>{fnKey=k; renderFullneck();});
+  buildKeyChips('m-progkey-row', progKey, k=>{progKey=k; renderProg(progId);});
+
+  buildScaleSelect();
+  document.getElementById('m-fn-scale').addEventListener('change',e=>{fnMode=e.target.value; renderFullneck();});
+  buildViewSelect();
+  document.getElementById('m-fn-view').addEventListener('change',e=>{fnView=e.target.value; renderFullneck();});
+
+  buildProgSelect();
+  document.getElementById('m-prog-select').addEventListener('change',e=>renderProg(e.target.value));
+
+  // Color chips
+  document.querySelectorAll('#m-color-row [data-color]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#m-color-row .chip').forEach(c=>c.classList.remove('on'));
+      b.classList.add('on');
+      COLOR_MODE=b.dataset.color;
+      renderFullneck(); renderBoxes();
+    });
+  });
+
+  applyI18n();
+});
+</script>
+</body>
+</html>
