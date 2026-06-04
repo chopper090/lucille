@@ -1,0 +1,17 @@
+{
+  "name": "Lucille — Pentatonica Lab",
+  "short_name": "Lucille",
+  "description": "Guida didattica alla chitarra blues-rock: fretboard, pentatoniche, sistema CAGED, brani.",
+  "lang": "it",
+  "start_url": "./BLUE_Guide.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1410",
+  "theme_color": "#1a1410",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
