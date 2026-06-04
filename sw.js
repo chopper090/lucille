@@ -1,5 +1,5 @@
 // Lucille — Pentatonica Lab · service worker (offline-first)
-const CACHE = 'lucille-v1';
+const CACHE = 'lucille-v1.0.0';
 const ASSETS = [
   './', './index.html', './BLUE_Guide.html', './BLUE_Guide_Mobile.html',
   './icon-192.png', './icon-512.png', './icon-512-maskable.png', './manifest.webmanifest'
