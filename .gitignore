@@ -1,0 +1,25 @@
+# Claude / dev tooling
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Dependencies / build
+node_modules/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Backup / temp
+*.tmp
